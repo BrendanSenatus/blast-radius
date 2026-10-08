@@ -1,0 +1,3 @@
+# Blast Radius
+
+Blast Radius is a small Kubernetes (k3s) platform that I build, harden, attack and measure, layer by layer. A containerized Python FastAPI service runs in the cluster, and Falco watches it at runtime: Phase 0 wires Falco through Falcosidekick to Discord, so opening a shell in the API pod sends an alert within seconds. Later phases add RBAC, network policy, Pod Security Admission and Kyverno, CI scanning with gitleaks, Checkov and Trivy, an automated responder that quarantines compromised pods, and an AWS layer in Terraform. Setup steps for Phase 0 are in [docs/phase-0.md](docs/phase-0.md).

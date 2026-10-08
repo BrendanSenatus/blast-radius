@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: app
+  labels:
+    app: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: blast-radius-api:dev
+          # Never pull: the image only exists in k3s's local store after you import it.
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: API_KEY_FILE
+              value: /etc/blast-radius/api-key
+          volumeMounts:
+            - name: api-key
+              mountPath: /etc/blast-radius
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+      volumes:
+        - name: api-key
+          secret:
+            secretName: api-key

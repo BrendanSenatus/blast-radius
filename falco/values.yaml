@@ -1,0 +1,32 @@
+# Falco + Falcosidekick for a single-node k3s cluster on ARM64.
+# Install with: helm install falco falcosecurity/falco -n security -f falco/values.yaml \
+#   --set-string falcosidekick.config.discord.webhookurl="$DISCORD_WEBHOOK_URL"
+# The webhook URL is passed on the command line so it never lands in git.
+
+driver:
+  # Modern eBPF needs no kernel headers or compiled module (kernel 5.8+ with BTF,
+  # which current Ubuntu has). Saves disk and avoids ARM64 driver builds.
+  kind: modern_ebpf
+
+collectors:
+  containerEngine:
+    enabled: true
+    engines:
+      containerd:
+        enabled: true
+        # k3s runs its own containerd here, not at the usual /run/containerd path.
+        sockets: ["/run/k3s/containerd/containerd.sock"]
+
+# Flush Falco's own logs immediately so `kubectl logs` shows alerts right away.
+tty: true
+
+falcosidekick:
+  enabled: true
+  replicaCount: 1
+  webui:
+    enabled: false
+  config:
+    discord:
+      webhookurl: ""
+      # "Terminal shell in container" fires at Notice.
+      minimumpriority: notice
